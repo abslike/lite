@@ -145,7 +145,7 @@
         android:name="com.vtosters.lite.VKApplication"
         android:allowBackup="true"
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-        android:debuggable="false"
+        android:debuggable="true"
         android:localeConfig="@xml/locales_config"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/vt_launcher"
