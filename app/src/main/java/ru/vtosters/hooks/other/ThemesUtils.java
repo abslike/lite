@@ -16,12 +16,10 @@ import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import com.vk.articles.preload.WebCachePreloader;
 import com.vk.core.drawable.RecoloredDrawable;
-import com.vk.core.preference.Preference;
 import com.vk.core.ui.themes.MilkshakeHelper;
 import com.vk.core.ui.themes.VKTheme;
 import com.vk.core.ui.themes.VKThemeHelper;
@@ -30,6 +28,7 @@ import com.vtosters.lite.data.ThemeTracker;
 import ru.vtosters.lite.deviceinfo.OEMDetector;
 import ru.vtosters.lite.themes.ThemesCore;
 import ru.vtosters.lite.themes.ThemesHacks;
+import ru.vtosters.lite.themes.ThemesManager;
 import ru.vtosters.lite.ui.wallpapers.WallpapersHooks;
 import ru.vtosters.lite.utils.LifecycleUtils;
 import ru.vtosters.lite.utils.WebViewColoringUtils;
@@ -48,10 +47,6 @@ public class ThemesUtils {
         }
     } // Apply VKTheme and ImTheme (hard applying without dynamic theme changing)
 
-    public static boolean isCustomAccentEnabled() {
-        return ThemesUtils.isMonetTheme() || !useNewColorEngine();
-    }
-
     public static ColorStateList getAccenedColorStateList() {
         return ColorStateList.valueOf(getAccentColor());
     }
@@ -65,7 +60,7 @@ public class ThemesUtils {
             activity = LifecycleUtils.getCurrentActivity();
         }
         VKThemeHelper.theme(theme, activity, fl);
-        if (isMonetTheme()) ThemesCore.clear();
+        if (isMonetTheme() || ThemesManager.canApplyCustomAccent()) ThemesCore.clear();
         if (restartActivity) activity.recreate();
         ThemeTracker.a();
         WebViewColoringUtils.isLoaded = false;
@@ -85,13 +80,8 @@ public class ThemesUtils {
         return getBoolValue("amoledtheme", false);
     }
 
-    public static boolean useNewColorEngine() {
-        return getBoolValue("useNewColorEngine", false);
-    }
-
     public static int getAccentColor() {
-        var color = Preferences.getPreferences().getInt("accent_color", getColorFromAttr(R.attr.accent));
-        return color == 0 || useNewColorEngine() || isMonetTheme() ? getColorFromAttr(R.attr.accent) : color;
+        return getColorFromAttr(R.attr.accent);
     } // Color accent
 
     //region Used for migrating accent color to new version
@@ -309,7 +299,7 @@ public class ThemesUtils {
     } // Recolor drawable to accent color
 
     public static Drawable recolorToolbarDrawable(Drawable drawable) {
-        if (!ThemesUtils.isCustomAccentEnabled()) return drawable;
+        if (!ThemesUtils.isMonetTheme()) return drawable;
         if (drawable == null) return null;
         return new RecoloredDrawable(drawable, (ThemesUtils.isMilkshake() && !ThemesUtils.isDarkTheme()) ? ThemesUtils.getAccentColor() : ThemesUtils.getHeaderText());
     }
