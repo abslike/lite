@@ -1,4 +1,4 @@
-package ru.vtosters.lite.music.cache.injectors;
+package ru.vtosters.hooks.music.injectors;
 
 import android.os.RemoteException;
 import android.text.TextUtils;
@@ -12,7 +12,7 @@ import io.reactivex.ObservableOnSubscribe;
 import org.json.JSONException;
 import org.json.JSONObject;
 import ru.vtosters.lite.downloaders.AudioDownloader;
-import ru.vtosters.lite.music.cache.CacheDatabaseDelegate;
+import ru.vtosters.lite.music.cache.MusicCacheImpl;
 import ru.vtosters.lite.music.cache.helpers.PlaylistHelper;
 import ru.vtosters.lite.music.cache.helpers.TracklistHelper;
 
@@ -30,7 +30,7 @@ public class PlaylistInjector {
     }
 
     public static boolean eligibleForOfflineCaching() {
-        return CacheDatabaseDelegate.hasTracks();
+        return !MusicCacheImpl.isEmpty();
     }
 
     public static Observable<AudioGetPlaylist.c> injectGetPlaylist(AudioGetPlaylist audioGetPlaylist) {

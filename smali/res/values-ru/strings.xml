@@ -5405,7 +5405,7 @@
     <string name="newsfeedlistmanager_summ">Настройки списков новостей</string>
     <string name="newsfeedlistmanager_reset_title">Сбросить список новостей</string>
     <string name="where_is_cache_settings">Где настройки кеша?</string>
-    <string name="where_is_cache_settings_summ">Они переехали в настройки мода во вкладку Другое</string>
+    <string name="where_is_cache_settings_summ">Они переехали в настройки мода во вкладку Данные и память</string>
     <string name="gms_about">О GMS</string>
     <string name="gms_what_is_title">Что такое GMS?</string>
     <string name="gms_what_is_summ">GMS - Google Mobile Services, необходимый компонент для нормальной работы приложений. Все уведомления, вход в игры, Google Play и прочие функции устройства используют этот компонент</string>
@@ -5420,7 +5420,7 @@
     <string name="gms_download_microg">Скачать MicroG</string>
     <string name="gms_what_to_do_next">Что делать дальше?</string>
     <string name="gms_what_to_do_after_microg_title">Что делать после установки MicroG?</string>
-    <string name="gms_what_to_do_after_microg_summ">1. Войдите в свой Google аккаунт \n2. Разрешите VTLite получать уведомления\n3. Обновите регистрацию Firebase в настройках в разделе "Другое"</string>
+    <string name="gms_what_to_do_after_microg_summ">1. Войдите в свой Google аккаунт в настройках MicroG \n2. Включите регистрацию устройства \n3. Включите облачный обмен сообщениями \n4. Переустановите VTLite \n5. Разрешите ему принимать уведомления</string>
     <string name="donate">Помочь проекту</string>
     <string name="fulltime">dd MMMM yyyy в HH:mm:ss</string>
     <string name="fulltime2">dd MMMM в HH:mm:ss</string>
@@ -5446,7 +5446,7 @@
     <string name="BGStickerssum">Для включения/отключения вам необходимо очистить кеш приложения</string>
     <string name="addinf">Дополнительная информация</string>
     <string name="copyid">Скопировать айди</string>
-    <string name="vtssfs">VT Функции</string>
+    <string name="vtssfs">Серверные функции</string>
     <string name="vticon">Иконка приложения</string>
     <string name="vticonbtn">Использовать оригинальную иконку</string>
     <string name="vticonsummary">Использование оригинального названия и иконки приложения как у официального клиента ВК</string>
@@ -5640,7 +5640,7 @@
     <string name="friendsblock_title">Скрыть друзей</string>
     <string name="friendsblock_summ">Скрыть блок рекомендаций друзей в друзьях</string>
     <string name="onlineformatter_title">Расширенный онлайн</string>
-    <string name="onlineformatter_summ">Показывать с какого приложения/клиента человек в онлайне</string>
+    <string name="onlineformatter_summ">Показывать с какого приложения/клиента человек в онлайне\n\nНапример: Онлайн с помощью Kate Mobile</string>
     <string name="voices_vtl">Голосовые сообщения</string>
     <string name="disable_voice_listening_summ">Функция позволяет не отправлять статус прослушивания голосовых сообщений человека вами</string>
     <string name="listen_v_title">Отключить статус прослушивания</string>
@@ -6392,7 +6392,7 @@
     <string name="useGenius_summ">Получать тексты с сервиса Genius</string>
     <string name="useGenius_title">Тексты с Genius</string>
 
-    <string name="datasettings_title">Настройки данных приложения</string>
+    <string name="datasettings_title">Данные и память</string>
     <string name="invalidate_theme_cache_title">Инвалидация кэша темы</string>
     <string name="invalidate_theme_cache_each_update_title">Очистка кэша темы после обновления для предотвращения проблем с акцентами</string>
 
@@ -6414,4 +6414,7 @@
     <string name="clear_all_cache">Очистить весь кеш?</string>
     <string name="cache_size">Размер приложения</string>
     <string name="cache_size_summ">Вес кеша приложения</string>
+
+    <string name="invertcached_title">Инвертировать список</string>
+    <string name="invertcached_summ">Инвертировать список кешированных треков</string>
 </resources>

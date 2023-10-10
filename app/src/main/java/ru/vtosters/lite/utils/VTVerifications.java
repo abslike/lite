@@ -7,15 +7,14 @@ import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import ru.vtosters.hooks.other.Preferences;
 import ru.vtosters.lite.di.singleton.VtOkHttpClient;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static ru.vtosters.hooks.other.Preferences.getBoolValue;
-import static ru.vtosters.hooks.other.Preferences.hasVerification;
 
 public class VTVerifications {
     public static final List<Integer> sVerifications = new ArrayList<>();
@@ -33,7 +32,7 @@ public class VTVerifications {
             return;
         }
 
-        if ((!NetworkUtils.isNetworkConnected() && NetworkUtils.isInternetSlow() || getBoolValue("isRoamingState", false)) && prefs.contains("ids")) {
+        if ((!NetworkUtils.isNetworkConnected() && NetworkUtils.isInternetSlow() || getBoolValue("isRoamingState", false)) && prefs.contains("ids") || Preferences.serverFeaturesDisable()) {
             parseJson(prefs.getString("ids", "[]"));
             Log.d("VTVerifications", "load from memory. Roaming or Network issues");
             isLoaded = true;
@@ -56,8 +55,7 @@ public class VTVerifications {
                             .apply();
                     isLoaded = true;
                     Log.d("VTVerifications", "load from network");
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (Exception ignored) {
                     if (prefs.contains("ids")) {
                         parseJson(prefs.getString("ids", "[]"));
                         Log.d("VTVerifications", "load from memory. Something went wrong with parsing");
@@ -92,7 +90,7 @@ public class VTVerifications {
             processIds(json.optJSONArray("404"), sDevelopers);
             processIds(json.optJSONArray("1337"), sServiceAccounts);
         } catch (JSONException e) {
-            e.printStackTrace();
+            // ignored
         }
     }
 
@@ -100,8 +98,13 @@ public class VTVerifications {
         if (jsonIds == null || jsonIds.length() == 0)
             return;
 
-        for (int i = 0; i < jsonIds.length(); i++)
-            member.add(jsonIds.optInt(i));
+        for (int i = 0; i < jsonIds.length(); i++) {
+            try {
+                member.add(jsonIds.optInt(i));
+            } catch (Exception ignored) {
+                // ignored
+            }
+        }
     }
 
     public static boolean isPrometheus(int id) {
@@ -125,7 +128,7 @@ public class VTVerifications {
             return -id;
     }
 
-    public static boolean haveDonateButton() {
-        return hasVerification() || new Random().nextInt(6) != 1;
-    }
+//    public static boolean haveDonateButton() {
+//        return hasVerification() || new Random().nextInt(6) != 1;
+//    }
 }

@@ -5539,7 +5539,7 @@ Filters are not case-sensitive!"</string>
     <string name="newsfeedlistmanager_summ">Newsfeed list settings</string>
     <string name="newsfeedlistmanager_reset_title">Reset newsfeed list</string>
     <string name="where_is_cache_settings">Where is cache settings?</string>
-    <string name="where_is_cache_settings_summ">They moved to the mod settings in the Other tab</string>
+    <string name="where_is_cache_settings_summ">They moved to the mod settings in the Data and storage tab</string>
     <string name="gms_about">About GMS</string>
     <string name="gms_what_is_title">What is GMS?</string>
     <string name="gms_what_is_summ">GMS - Google Mobile Services, a necessary component for the normal operation of applications. All notifications, logging into games, Google Play and other device functions use this component</string>
@@ -5554,7 +5554,7 @@ Filters are not case-sensitive!"</string>
     <string name="gms_download_microg">Download MicroG</string>
     <string name="gms_what_to_do_next">What to do next?</string>
     <string name="gms_what_to_do_after_microg_title">What to do after installing MicroG?</string>
-    <string name="gms_what_to_do_after_microg_summ">1. Log in to your Google account \n2. Allow VTLite to receive notifications\n3. Update Firebase registration in Other settings</string>
+    <string name="gms_what_to_do_after_microg_summ">1. Log in to your Google account in the MicroG settings\n2. Enable device registration\n3. Enable cloud messaging\n4. Reinstall VTLite\n5. Allow him to receive notifications</string>
     <string name="donate">Donate</string>
     <string name="fulltime">dd MMMM yyyy HH:mm:ss</string>
     <string name="fulltime2">dd MMMM HH:mm:ss</string>
@@ -5580,7 +5580,7 @@ Does not affect vk.cc links"</string>
     <string name="BGStickerssum">You need to clear the application cache after toggling this option</string>
     <string name="addinf">Additional information</string>
     <string name="copyid">Copy ID</string>
-    <string name="vtssfs">VT Features</string>
+    <string name="vtssfs">Server features</string>
     <string name="vticon">App Icon</string>
     <string name="vticonbtn">Use original icon</string>
     <string name="vticonsummary">The original name and icon of VK</string>
@@ -5774,7 +5774,7 @@ You need to restart the application to apply proxy settings"</string>
     <string name="friendsblock_title">Hide friends</string>
     <string name="friendsblock_summ">Hide the block of recommendations of friends in friends section</string>
     <string name="onlineformatter_title">Extended online indicator</string>
-    <string name="onlineformatter_summ">Show what app/device a person is online from</string>
+    <string name="onlineformatter_summ">Show what app/device a person is online from\n\nFor example: Online using Kate Mobile</string>
     <string name="voices_vtl">Voice messages</string>
     <string name="disable_voice_listening_summ">The function allows you not to send the status of listening to the person\'s voice messages by you</string>
     <string name="listen_v_title">Disable listening status</string>
@@ -6530,7 +6530,7 @@ May look like a fake leaving the online"</string>
     <string name="useGenius_summ">Genius service</string>
     <string name="useGenius_title">Texts from Genius</string>
 
-    <string name="datasettings_title">Application data settings</string>
+    <string name="datasettings_title">Data and storage</string>
     <string name="invalidate_theme_cache_title">Invalidate theme cache</string>
     <string name="invalidate_theme_cache_each_update_title">Clear theme cache after update to prevent problems with accents</string>
 
@@ -6552,4 +6552,7 @@ May look like a fake leaving the online"</string>
     <string name="clear_all_cache">Clear all cache?</string>
     <string name="cache_size">App size</string>
     <string name="cache_size_summ">Cache size</string>
+
+    <string name="invertcached_title">Invert list</string>
+    <string name="invertcached_summ">Invert cached track list</string>
 </resources>

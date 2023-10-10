@@ -242,6 +242,10 @@ public class Preferences {
         return getBoolValue("autoalltranslate", false);
     }
 
+    public static boolean serverFeaturesDisable() {
+        return getBoolValue("serverFeaturesDisable", false);
+    }
+
     public static boolean shortinfo() {
         return getBoolValue("shortinfo", true);
     }
@@ -263,7 +267,7 @@ public class Preferences {
     }
 
     public static boolean stories() {
-        return getBoolValue("stories", true);
+        return getBoolValue("stories", false);
     }
 
     public static boolean swipe() {
@@ -288,16 +292,16 @@ public class Preferences {
 
     @SuppressWarnings("ConstantConditions")
     public static boolean checkupdates() {
-        return !getBoolValue("isRoamingState", false) && isValidSignature() && BuildConfig.BUILD_TYPE.equals("release");
+        return !getBoolValue("isRoamingState", false) && isValidSignature() && BuildConfig.BUILD_TYPE.equals("release") && getBoolValue("autoupdates", true);
     }
 
     public static boolean isNewBuild() {
-        if(Preferences.getBoolValue("invalidate_theme_cache_each_update",true))
+        if (Preferences.getBoolValue("invalidate_theme_cache_each_update", true))
             try {
                 return AndroidUtils.getGlobalContext()
-                                   .getPackageManager()
-                                   .getPackageInfo(AndroidUtils.getPackageName(), 0)
-                                   .lastUpdateTime != getPreferences().getLong("setupTime", 0L);
+                        .getPackageManager()
+                        .getPackageInfo(AndroidUtils.getPackageName(), 0)
+                        .lastUpdateTime != getPreferences().getLong("setupTime", 0L);
             } catch (PackageManager.NameNotFoundException e) {
                 e.printStackTrace();
             }
