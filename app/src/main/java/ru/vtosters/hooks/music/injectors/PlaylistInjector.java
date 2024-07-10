@@ -15,18 +15,20 @@ import ru.vtosters.lite.downloaders.AudioDownloader;
 import ru.vtosters.lite.music.cache.MusicCacheImpl;
 import ru.vtosters.lite.music.cache.helpers.PlaylistHelper;
 import ru.vtosters.lite.music.cache.helpers.TracklistHelper;
+import ru.vtosters.lite.utils.AccountManagerUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class PlaylistInjector {
-    public final static String CHANNEL_NAME = "VTCH";
     private static final ExecutorService executor = Executors.newCachedThreadPool();
+    public final static String CHANNEL_NAME = "VTCH";
 
     public static void injectDownloadPlaylist(Playlist playlist) {
-        executor.submit(() -> AudioDownloader.cachePlaylist(playlist));
+        AudioDownloader.cachePlaylist(playlist);
     }
 
     public static boolean eligibleForOfflineCaching() {
@@ -35,8 +37,10 @@ public class PlaylistInjector {
 
     public static Observable<AudioGetPlaylist.c> injectGetPlaylist(AudioGetPlaylist audioGetPlaylist) {
         try {
-            if (!eligibleForOfflineCaching())
+            if (MusicCacheImpl.isEmpty()) {
                 return null;
+            }
+            
             var requestArgs = audioGetPlaylist.b();
 
             var id = requestArgs.get("id");
@@ -44,11 +48,11 @@ public class PlaylistInjector {
             var accessKey = requestArgs.get("access_key");
             boolean isVirtualPlaylist = accessKey != null && (accessKey.equals("cache"));
             boolean isAlbumVirtualPlaylist = accessKey != null && (accessKey.equals("cacheAlbum"));
+            boolean isOwnCachePlaylist = Objects.equals(ownerId, String.valueOf(AccountManagerUtils.getUserId())) && Objects.equals(id, "-1");
 
-            Log.d("PlaylistInjector", "id = " + id + " / owner = " + ownerId + " / access = " + accessKey + " / " + isVirtualPlaylist + " + " + isAlbumVirtualPlaylist);
-
-            if (TextUtils.isEmpty(id) || (!isVirtualPlaylist && !isAlbumVirtualPlaylist))
+            if (TextUtils.isEmpty(id) || (!isVirtualPlaylist && !isAlbumVirtualPlaylist)) {
                 return null;
+            }
 
             return Observable.a((ObservableOnSubscribe<AudioGetPlaylist.c>) observableEmitter -> {
                 AudioGetPlaylist.c response = new AudioGetPlaylist.c();
@@ -73,7 +77,7 @@ public class PlaylistInjector {
 
                             response.c = tracks;
                         } catch (RemoteException | JSONException e) {
-                            e.printStackTrace();
+                            e.fillInStackTrace();
                             response.c = new ArrayList<>();
                         }
                         observableEmitter.b(response);
@@ -82,18 +86,18 @@ public class PlaylistInjector {
                     return;
                 }
 
-                if (isVirtualPlaylist) {
+                if (isOwnCachePlaylist) {
                     response.c = (ArrayList<MusicTrack>) TracklistHelper.getMyCachedMusicTracks();
                     response.b = PlaylistHelper.createCachedPlaylistMetadata();
                 } else {
-                    response.c = (ArrayList<MusicTrack>) TracklistHelper.getTracks(requestArgs.get("owner_id"));
-                    response.b = PlaylistHelper.createCachedPlaylistMetadata(requestArgs.get("owner_id"));
+                    response.c = (ArrayList<MusicTrack>) MusicCacheImpl.getPlaylistSongs(ownerId, id);
+                    response.b = MusicCacheImpl.getPlaylist(id, ownerId);
                 }
 
                 observableEmitter.b(response);
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            e.fillInStackTrace();
         }
         return null;
     }

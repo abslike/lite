@@ -8,13 +8,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.Log;
+
 import androidx.annotation.Nullable;
+
 import com.vk.dto.music.AlbumLink;
 import com.vk.dto.music.MusicTrack;
 import com.vk.dto.music.Thumb;
+
 import org.json.JSONObject;
-import ru.vtosters.lite.utils.AndroidUtils;
-import ru.vtosters.lite.utils.music.MusicCacheStorageUtils;
 
 import java.io.File;
 import java.lang.annotation.Retention;
@@ -22,6 +23,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
+
+import ru.vtosters.lite.music.cache.delegate.PlaylistCacheDbDelegate;
+import ru.vtosters.lite.utils.AccountManagerUtils;
+import ru.vtosters.lite.utils.AndroidUtils;
+import ru.vtosters.lite.utils.music.MusicCacheStorageUtils;
+import ru.vtosters.lite.utils.music.MusicTrackUtils;
 
 /**
  * <p class="note"><strong>Note:</strong> the {@link AutoCloseable} interface was
@@ -95,6 +102,7 @@ public class MusicCacheDb extends SQLiteOpenHelper implements AutoCloseable { //
         }
         return null;
     }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(Constants.CREATE_QUERY);
@@ -104,23 +112,25 @@ public class MusicCacheDb extends SQLiteOpenHelper implements AutoCloseable { //
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < newVersion) {
             List<MusicTrack> tracks = getTracksWithCursor(db.query(Constants.TABLE_NAME, null, null, null, null, null, null));
-            
+
             db.execSQL(Constants.DROP_QUERY);
-            
+
             onCreate(db);
-            
+
             for (MusicTrack track : tracks) {
                 ContentValues vals = new ContentValues();
                 vals.put(Constants.COLUMN_TRACK_ID, track.y1());
                 vals.put(Constants.COLUMN_ALBUM_ID, track.I != null ? track.I.getId() + "" : "-1");
                 vals.put(Constants.COLUMN_TITLE, track.f);
                 vals.put(Constants.COLUMN_SUBTITLE, track.g);
-                vals.put(Constants.COLUMN_ARTIST, track.C);
+                vals.put(Constants.COLUMN_ARTIST, MusicTrackUtils.getArtists(track));
                 vals.put(Constants.COLUMN_ALBUM_TITLE, track.I != null ? track.I.getTitle() : "");
                 vals.put(Constants.COLUMN_EXPLICIT, Boolean.compare(track.K, true));
                 vals.put(Constants.COLUMN_DURATION, track.h);
                 vals.put(Constants.COLUMN_HAS_ARTWORK, track.I != null && track.I.u1() != null);
                 db.insert(Constants.TABLE_NAME, null, vals);
+
+                PlaylistCacheDbDelegate.addTrackToPlaylist(AndroidUtils.getGlobalContext(), AccountManagerUtils.getUserId() + "_-1", track.y1());
             }
         }
     }
@@ -136,9 +146,9 @@ public class MusicCacheDb extends SQLiteOpenHelper implements AutoCloseable { //
         vals.put(Constants.COLUMN_EXPLICIT, Boolean.compare(explicit, true));
         vals.put(Constants.COLUMN_DURATION, duration);
         vals.put(Constants.COLUMN_HAS_ARTWORK, Boolean.compare(hasArtwork, true));
-        
+
         long row = getWritableDatabase().insert(Constants.TABLE_NAME, null, vals);
-        
+
         if (AndroidUtils.isDebuggable()) Log.d("MusicCacheDb", "addTrack(): " + row);
     }
 
@@ -164,16 +174,28 @@ public class MusicCacheDb extends SQLiteOpenHelper implements AutoCloseable { //
         return DatabaseUtils.queryNumEntries(getReadableDatabase(), Constants.TABLE_NAME);
     }
 
+    public boolean isDatabaseEmpty() {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT EXISTS(SELECT 1 FROM " + Constants.TABLE_NAME + " LIMIT 1)", null);
+        cursor.moveToFirst();
+        boolean isEmpty = cursor.getInt(0) == 0;
+        cursor.close();
+        return isEmpty;
+    }
+
+    public MusicTrack getTrackById(String trackId) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.query(Constants.TABLE_NAME, null, Constants.COLUMN_TRACK_ID + " = ?", new String[]{trackId}, null, null, null);
+        MusicTrack track = null;
+        if (cursor.moveToFirst()) {
+            track = fromCursor(cursor);
+        }
+        cursor.close();
+        return track;
+    }
+
     public List<MusicTrack> getAllTracks() {
         return getTracksWithCursor(getReadableDatabase().query(Constants.TABLE_NAME, null, null, null, null, null, null));
-    }
-
-    public List<MusicTrack> getAlbum(String albumId) {
-        return getAlbumTracks(albumId, null);
-    }
-
-    public List<MusicTrack> getFirstAlbumTrack(String albumId) {
-        return getAlbumTracks(albumId, "0,1");
     }
 
     private List<MusicTrack> getAlbumTracks(String albumId, @Nullable String limit) {
@@ -214,7 +236,7 @@ public class MusicCacheDb extends SQLiteOpenHelper implements AutoCloseable { //
 
     @Retention(RetentionPolicy.SOURCE)
     public @interface Constants {
-        int DV_VERSION = 0x2;
+        int DV_VERSION = 0x3;
         String DB_NAME = "vt_lite_cache.db";
         String TABLE_NAME = "tracks";
         //columns

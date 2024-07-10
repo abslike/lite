@@ -8,6 +8,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import ru.vtosters.hooks.other.Preferences;
 import ru.vtosters.lite.music.cache.MusicCacheImpl;
+import ru.vtosters.lite.music.cache.delegate.MusicCacheDbDelegate;
+import ru.vtosters.lite.utils.AndroidUtils;
 import ru.vtosters.lite.utils.music.MusicCacheStorageUtils;
 
 import java.io.File;
@@ -22,24 +24,19 @@ public class TracklistHelper {
     }
 
     public static List<MusicTrack> getTracks() {
-        List<MusicTrack> tracks = MusicCacheImpl.getAllTracks();
+        List<MusicTrack> tracks = MusicCacheImpl.getAllOwnTracks();
 
         boolean doNotinvertOrder = Preferences.getBoolValue("invertCachedTracks", false);
 
-        if (!doNotinvertOrder) {
+        if (doNotinvertOrder) {
             Collections.reverse(tracks);
         }
 
         return tracks;
     }
 
-
-    public static List<MusicTrack> getTracks(String id) {
-        return MusicCacheImpl.getAlbumById(id);
-    }
-
-    public static List<MusicTrack> getTracksOne(String id) {
-        return MusicCacheImpl.getFirstAlbumTrack(id);
+    public static MusicTrack getTrack(String id) {
+        return MusicCacheDbDelegate.getTrackById(AndroidUtils.getGlobalContext(), id);
     }
 
     public static JSONArray tracksToIds(List<MusicTrack> tracks) {

@@ -17,9 +17,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
 import androidx.core.app.NotificationManagerCompat;
+
+import com.vk.core.util.AppContextHolder;
 import com.vk.core.util.ToastUtils;
 import com.vtosters.lite.general.fragments.WebViewFragment;
-import ru.vtosters.hooks.other.Preferences;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,12 +34,6 @@ import java.util.Random;
 
 public class AndroidUtils {
     private static final String ALLOWED_CHARACTERS = "0123456789qwertyuiopasdfghjklzxcvbnm";
-    public enum ScreenSize {
-        small,
-        normal,
-        large,
-        xlarge
-    }
 
     public static boolean isDebuggable() {
         return 0 != (AndroidUtils.getGlobalContext().getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE);
@@ -57,14 +52,8 @@ public class AndroidUtils {
 
     @NonNull
     public static Context getGlobalContext() {
-        try {
-            Method getInitialApplicationMtd = ReflectionUtils.findMethod(Class.forName("android.app.AppGlobals"), "getInitialApplication");
-            return (Context) getInitialApplicationMtd.invoke(null);
-        } catch (Exception e) {
-            Log.d("GlobalContext", "Error while fetching context via refl");
-        }
-        return LifecycleUtils.getCurrentActivity();
-    } // Getting the global context through reflection to use context on application initialization
+        return AppContextHolder.a;
+    } // Getting the global context to use context on application initialization
 
     public static Resources getResources() {
         return getGlobalContext().getResources();
@@ -223,5 +212,12 @@ public class AndroidUtils {
 
     public static String upString(String s) {
         return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
+    }
+
+    public enum ScreenSize {
+        small,
+        normal,
+        large,
+        xlarge
     }
 }

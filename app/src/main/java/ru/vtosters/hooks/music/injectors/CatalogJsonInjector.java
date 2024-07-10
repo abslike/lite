@@ -4,20 +4,22 @@ import android.util.Log;
 import bruhcollective.itaysonlab.libvkx.client.LibVKXClient;
 import com.vk.core.network.Network;
 import com.vk.core.util.DeviceIdProvider;
-import okhttp3.Headers;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import ru.vtosters.hooks.other.Preferences;
-import ru.vtosters.lite.di.singleton.VtOkHttpClient;
+import ru.vtosters.lite.music.cache.helpers.PlaylistHelper;
 import ru.vtosters.lite.music.cache.MusicCacheImpl;
 import ru.vtosters.lite.utils.AccountManagerUtils;
 import ru.vtosters.lite.utils.AndroidUtils;
+import ru.vtosters.sponsorpost.utils.GzipDecompressor;
 
 import java.io.IOException;
+import java.util.Objects;
 
+import static com.vk.core.network.Network.ClientType.CLIENT_API;
 import static ru.vtosters.hooks.DateHook.getLocale;
 import static ru.vtosters.hooks.GroupsCatalogInjector.injectIntoCatalog;
 import static ru.vtosters.hooks.other.Preferences.getBoolValue;
@@ -26,8 +28,6 @@ import static ru.vtosters.lite.proxy.ProxyUtils.getApi;
 import static ru.vtosters.lite.utils.AccountManagerUtils.getUserId;
 
 public class CatalogJsonInjector {
-    private static final OkHttpClient mClient = VtOkHttpClient.getInstance();
-
     public static JSONObject music(JSONObject json) throws JSONException {
         var catalog = json.optJSONObject("catalog");
         var oldItems = catalog != null ? catalog.optJSONArray("sections") : null;
@@ -41,9 +41,15 @@ public class CatalogJsonInjector {
 
                 removeUnsupportedLayouts(blocks);
 
-                fetchCatalogId("https://vk.com/audio?section=my_playlists", oldItems);
+                if (Preferences.getBoolValue("playlistsCatalogs", true)) {
+                    fetchCatalogId("https://vk.com/audio?section=my_playlists", oldItems);
 
-                fetchCatalogId("https://vk.com/audio?section=albums", oldItems);
+                    fetchCatalogId("https://vk.com/audio?section=albums", oldItems);
+                }
+
+                if (Preferences.sendMusicMetrics() && Preferences.getBoolValue("playStatCatalog", false)) {
+                    fetchCatalogId("https://vk.com/audio?section=recent", oldItems);
+                }
 
                 setDefaultAudioPage(oldItems, catalog);
             }
@@ -52,18 +58,16 @@ public class CatalogJsonInjector {
                 var noPlaylists = !json.has("playlists");
 
                 if (noPlaylists) {
-                    json.put("playlists", new JSONArray().put(getPlaylist()));
-                    Log.d("catalogInjector", "added new pl");
+                    PlaylistHelper.addCachedPlaylists(new JSONArray());
                 } else {
-                    json.optJSONArray("playlists").put(getPlaylist());
-                    Log.d("catalogInjector", "added to exist pl");
+                    PlaylistHelper.addCachedPlaylists(json.optJSONArray("playlists"));
                 }
 
                 if (!useOldAppVer || noPlaylists) {
                     var newBlocks = new JSONArray();
 
                     newBlocks
-                            .put(getCatalogHeader())
+                            .put(getCatalogHeader("Кешированные плейлисты"))
                             .put(getCatalogPlaylist())
                             .put(getCatalogSeparator());
 
@@ -90,6 +94,7 @@ public class CatalogJsonInjector {
             var blocks = section.getJSONArray("blocks");
 
             fixDailyMix(blocks);
+            removeUnsupportedLayouts(blocks);
 
             if (!isUsersCatalog || MusicCacheImpl.isEmpty() || LibVKXClient.isIntegrationEnabled()) {
                 return; // early return if not users catalog or no tracks or integration enabled
@@ -98,22 +103,16 @@ public class CatalogJsonInjector {
             var noPlaylists = !json.has("playlists");
 
             if (noPlaylists) {
-                json.put("playlists", new JSONArray().put(getPlaylist()));
-                Log.d("catalogInjector", "added new pl");
+                PlaylistHelper.addCachedPlaylists(new JSONArray());
             } else {
-                try {
-                    json.optJSONArray("playlists").put(getPlaylist());
-                    Log.d("catalogInjector", "added to exist pl");
-                } catch (Exception e) {
-                    Log.d("catalogInjector", e.toString());
-                }
+                PlaylistHelper.addCachedPlaylists(json.optJSONArray("playlists"));
             }
 
             if (!useOldAppVer && !noPlaylists) {
                 var newBlocks = new JSONArray();
 
                 newBlocks
-                        .put(getCatalogHeader())
+                        .put(getCatalogHeader("Кешированные плейлисты"))
                         .put(getCatalogPlaylist())
                         .put(getCatalogSeparator());
 
@@ -131,12 +130,15 @@ public class CatalogJsonInjector {
 
                     if (type.equals("music_playlists") && j.has("playlists_ids")) {
                         var newarr = new JSONArray();
-                        var playlists_ids = j.optJSONArray("playlists_ids");
+                        var playlists_ids = j.getJSONArray("playlists_ids");
+                        var savedPlaylists = PlaylistHelper.getCachedPlaylistsIds();
 
-                        newarr.put(getUserId() + "_-1");
+                        for (int n = 0; n < savedPlaylists.length(); n++) {
+                            newarr.put(savedPlaylists.getString(n));
+                        }
 
                         for (int n = 0; n < playlists_ids.length(); n++) {
-                            newarr.put(playlists_ids.optString(n));
+                            newarr.put(playlists_ids.getString(n));
                         }
 
                         Log.d("catalogInjector", "added to pl ids");
@@ -218,16 +220,35 @@ public class CatalogJsonInjector {
         }
     }
 
-    private static void removeUnsupportedLayouts(JSONArray blocks) throws JSONException {
-        for (int i = 0; i < blocks.length(); i++) {
-            var block = blocks.optJSONObject(i);
-            var layout = block.optJSONObject("layout");
-            if (layout != null) {
-                var name = layout.optString("name");
-                if (name.equals("header_extended")) {
-                    if (layout.has("top_title")) blocks.remove(i);
-                    layout.put("name", "header");
-                }
+    private static void removeUnsupportedLayouts(JSONArray blocks) {
+        for (int i = blocks.length() - 1; i >= 0; i--) {
+            JSONObject block = blocks.optJSONObject(i);
+            if (block == null) continue;
+
+            JSONObject layout = block.optJSONObject("layout");
+            if (layout == null) continue;
+
+            String data_type = block.optString("data_type");
+
+            if (Objects.equals(data_type, "music_recommended_playlists") || Objects.equals(data_type, "radiostations")) {
+                blocks.remove(i); // block
+                if (i - 1 >= 0) blocks.remove(i - 1); // text
+                if (i - 2 >= 0) blocks.remove(i - 2); // divider
+                continue; // Skip to the next iteration after removing
+            }
+
+            String name = layout.optString("name");
+            if (!name.equals("header_extended")) {
+                continue; // Skip to the next iteration if not header_extended
+            }
+
+            if (layout.has("top_title")) {
+                blocks.remove(i);
+            }
+            try {
+                layout.put("name", "header");
+            } catch (JSONException e) {
+                e.fillInStackTrace();
             }
         }
     }
@@ -263,9 +284,12 @@ public class CatalogJsonInjector {
                         + sectionUrl
                         + "&access_token="
                         + AccountManagerUtils.getUserToken())
-                .a(Headers.a("User-Agent", Network.l.c().a(), "Content-Type", "application/x-www-form-urlencoded; charset=utf-8")).a();
-        try {
-            var json = new JSONObject(mClient.a(request).execute().a().g()).getJSONObject("response");
+                .a("Accept-Encoding", "gzip")
+                .a("User-Agent", Network.l.c().a())
+                .a("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+                .a();
+        try (Response resp = Network.b(CLIENT_API).a(request).execute()) {
+            var json = new JSONObject(GzipDecompressor.decompressResponse(resp)).getJSONObject("response");
             var catalogarr = json.optJSONObject("catalog").optJSONArray("sections").optJSONObject(0);
 
             var title = catalogarr.optString("title");
