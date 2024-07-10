@@ -33,7 +33,7 @@ task cleanVersionFile {
 }
 
 android {
-    compileSdkVersion 35
+    compileSdkVersion 34
     buildToolsVersion '32.0.0'
 
     sourceSets {
@@ -45,7 +45,7 @@ android {
     defaultConfig {
         applicationId "ru.vtosters.lite.utils.lite"
         minSdk 22
-        targetSdkVersion 35
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
