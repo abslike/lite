@@ -34,7 +34,7 @@ task cleanVersionFile {
 
 android {
     compileSdkVersion 35
-    buildToolsVersion '35.0.0'
+    buildToolsVersion '32.0.0'
 
     sourceSets {
         main {
